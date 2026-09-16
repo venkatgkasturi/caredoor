@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+:root {
+  --canvas: #f4f5f3; --ink: #172432; --muted-ink: #6d7981; --navy: #102332; --coral: #ef7059; --mint: #8dd4b4; --safe: #287a5c; --line: #dfe3e2;
+  --background: #ffffff; --foreground: #172432; --card: #ffffff; --card-foreground: #172432; --popover: #ffffff; --popover-foreground: #172432;
+  --primary: #102332; --primary-foreground: #ffffff; --secondary: #edf1f4; --secondary-foreground: #172432; --muted: #edf1f4; --muted-foreground: #6d7981;
+  --accent: #f2f4f5; --accent-foreground: #172432; --destructive: #bd4f39; --border: #dfe3e2; --input: #dfe3e2; --ring: #567285; --radius: 0.75rem;
+}
+@theme inline {
+  --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground); --color-destructive: var(--destructive); --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px); --font-sans: var(--font-manrope), "Avenir Next", Avenir, system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--canvas); }
+body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-manrope), "Avenir Next", Avenir, system-ui, sans-serif; }
+button { cursor: pointer; }
+.eyebrow { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a959b; }
+.event-card { animation: event-in 420ms cubic-bezier(.2,.8,.2,1); }
+.event-visual::after { content: ""; position: absolute; inset: 0; background: linear-gradient(125deg, rgba(62,91,105,.2), transparent 42%, rgba(0,0,0,.24)); }
+.door-frame { position: absolute; inset: 21px 34px 0; border: 8px solid #6d7b82; border-bottom: 0; background: #354955; box-shadow: inset 0 0 45px rgba(0,0,0,.28); }
+.door-frame span:first-child { position: absolute; left: 50%; top: 0; bottom: 0; width: 5px; background: #6d7b82; }
+.door-frame span:last-child { position: absolute; left: 0; right: 0; top: 42%; height: 5px; background: #6d7b82; }
+.person-silhouette { position: absolute; z-index: 1; left: 52%; bottom: 0; width: 66px; height: 154px; transform: translateX(-50%); }
+.person-silhouette span { position: absolute; left: 15px; top: 0; width: 38px; height: 38px; border-radius: 50%; background: #111c23; }
+.person-silhouette i { position: absolute; left: 4px; top: 35px; width: 59px; height: 120px; border-radius: 28px 28px 6px 6px; background: #111c23; }
+@keyframes event-in { from { opacity: 0; transform: translateY(10px) scale(.992); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 767px) { .event-visual { min-height: 185px; } .door-frame { inset-inline: 24%; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
