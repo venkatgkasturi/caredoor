@@ -15,14 +15,23 @@ The repository contains working Ring Partner API integration points:
 - `POST /api/ring/snapshot` retrieves an authorized image snapshot with `private, no-store` caching.
 - `lib/ring.ts` also implements Event History retrieval for reconciliation.
 
+## AWS Builder integration
+
+- `POST /api/events/explain` calls Amazon Bedrock through the official AWS SDK to turn structured event facts into one calm, plain-language sentence.
+- The prompt explicitly prohibits identity guesses, danger claims, diagnoses, and unsupported facts.
+- Signed Ring webhooks are normalized and published to Amazon SQS when `CAREDOOR_EVENTS_QUEUE_URL` is configured.
+- If Bedrock is unavailable, the caregiver experience falls back to deterministic safety rules rather than blocking the alert.
+- The interface labels whether its explanation came from Amazon Bedrock or CareDoor safety rules.
+
 The live UI includes a simulator so the complete judging flow remains reliable even when a physical device is unavailable. For the final demo, the Ring Developer Playground should send the same motion or button event to the webhook endpoint.
 
 ## Run locally
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local` and add staging credentials from the Ring Developer Portal.
-3. Start the app with `npm run dev`.
-4. Configure the public HTTPS URL ending in `/api/ring/webhook` as the Ring webhook URL.
+3. Add AWS credentials, a Bedrock model ID, and an optional SQS queue URL.
+4. Start the app with `npm run dev`.
+5. Configure the public HTTPS URL ending in `/api/ring/webhook` as the Ring webhook URL.
 
 Never commit Ring access tokens, refresh tokens, client secrets, or HMAC keys.
 
@@ -37,7 +46,7 @@ Never commit Ring access tokens, refresh tokens, client secrets, or HMAC keys.
 
 ## Architecture
 
-Ring signed webhook → webhook verification/deduplication → normalized event → appointment correlation → optional snapshot → caregiver and resident experiences.
+Ring signed webhook → verification/deduplication → Amazon SQS → appointment correlation → optional Ring snapshot → Amazon Bedrock explanation → caregiver and resident experiences.
 
 For production, the normalized event should be published to Amazon SQS or EventBridge and processed asynchronously. Tokens should be encrypted with AWS KMS, snapshots should use short-lived signed URLs and lifecycle deletion, and operational events should be monitored in CloudWatch.
 

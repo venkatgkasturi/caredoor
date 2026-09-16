@@ -1,4 +1,5 @@
 import { type RingEventEnvelope, verifyRingWebhook } from "@/lib/ring";
+import { enqueueRingEvent } from "@/lib/aws";
 
 const recentlyProcessed = new Map<string, number>();
 
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     detectedAt: event.data.attributes?.timestamp ?? Date.now(),
     subtype: event.data.attributes?.sub_type,
   };
-  console.info("Accepted Ring event", normalized);
-  return Response.json({ accepted: true, requestId: normalized.requestId });
+  const queue = await enqueueRingEvent(normalized);
+  console.info("Accepted Ring event", { ...normalized, queue });
+  return Response.json({ accepted: true, requestId: normalized.requestId, queued: queue.queued });
 }

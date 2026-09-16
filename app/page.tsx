@@ -25,6 +25,8 @@ export default function HomePage() {
   const [eventVisible, setEventVisible] = useState(true);
   const [resolution, setResolution] = useState<Resolution>("pending");
   const [metadataOnly, setMetadataOnly] = useState(false);
+  const [explanation, setExplanation] = useState("Unusual timing and repeated activity.");
+  const [explanationSource, setExplanationSource] = useState<"rules" | "bedrock" | "loading">("rules");
 
   const statusCopy = useMemo(() => {
     if (resolution === "expected") return "Marked expected — no follow-up needed";
@@ -36,7 +38,19 @@ export default function HomePage() {
   function simulateEvent() {
     setEventVisible(false);
     setResolution("pending");
+    setExplanationSource("loading");
     window.setTimeout(() => setEventVisible(true), 240);
+    void fetch("/api/events/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType: "motion.human", detectedAt: "11:42 PM", repeatedCount: 3, windowMinutes: 6, hasMatchingVisit: false, deviceName: "Front Door" }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Bedrock unavailable");
+        return response.json() as Promise<{ explanation: string }>;
+      })
+      .then((result) => { setExplanation(result.explanation); setExplanationSource("bedrock"); })
+      .catch(() => { setExplanation("Unusual timing and repeated activity."); setExplanationSource("rules"); });
   }
 
   useEffect(() => {
@@ -146,7 +160,7 @@ export default function HomePage() {
                         <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#fff0ec] px-2.5 py-1 text-xs font-bold text-[#bd4f39]">Unmatched visitor</span><span className="text-xs font-medium text-[var(--muted-ink)]">2 minutes ago</span></div>
                         <h3 className="mt-3 text-[1.35rem] font-bold tracking-[-0.03em] text-[var(--navy)]">Activity at the front door</h3>
                         <p className="mt-1.5 max-w-xl text-[0.92rem] leading-6 text-[var(--muted-ink)]">A person was detected three times in six minutes. There is no visit scheduled for this time.</p>
-                        <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#f5f7f8] px-3.5 py-3 text-sm text-[var(--navy)]"><Sparkles className="mt-0.5 size-4 shrink-0 text-[#7d6bc6]" /><span><strong>Why this matters:</strong> unusual timing and repeated activity.</span></div>
+                        <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#f5f7f8] px-3.5 py-3 text-sm text-[var(--navy)]"><Sparkles className={`mt-0.5 size-4 shrink-0 text-[#7d6bc6] ${explanationSource === "loading" ? "animate-pulse" : ""}`} /><span><strong>Why this matters:</strong> {explanationSource === "loading" ? "Reviewing the event context…" : explanation}<small className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted-ink)]">{explanationSource === "bedrock" ? "Explained by Amazon Bedrock" : "CareDoor safety rules"}</small></span></div>
                         <p aria-live="polite" className={`mt-4 text-sm font-semibold ${resolution === "pending" ? "text-[var(--muted-ink)]" : resolution === "escalated" ? "text-[#b54836]" : "text-[var(--safe)]"}`}>{statusCopy}</p>
                         <div className="mt-4 flex flex-wrap gap-2.5"><Button onClick={() => setResolution("expected")} variant="outline" className="h-10 rounded-xl border-[var(--line)] px-4"><Check /> Expected</Button><Button onClick={() => setResolution("calling")} variant="outline" className="h-10 rounded-xl border-[var(--line)] px-4"><Phone /> Call Margaret</Button><Button onClick={() => setResolution("escalated")} className="h-10 rounded-xl bg-[var(--coral)] px-4 text-white hover:bg-[#e9624c]"><Radio /> Escalate</Button></div>
                       </div>

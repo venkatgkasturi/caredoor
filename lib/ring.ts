@@ -10,8 +10,11 @@ export type RingEventEnvelope = {
 };
 
 export class RingApiClient {
-  constructor(private readonly accessToken: string) {
+  private readonly accessToken: string;
+
+  constructor(accessToken: string) {
     if (!accessToken) throw new Error("A Ring access token is required");
+    this.accessToken = accessToken;
   }
 
   private async request(path: string, init: RequestInit = {}) {
