@@ -65,8 +65,8 @@ Care starts at the doorstep.
 
 1. Explain the caregiver's uncertainty in 15 seconds.
 2. Show an expected visit and the selected Ring device.
-3. Trigger a Ring Playground event.
-4. Show HMAC verification, SQS delivery and the Bedrock-labeled explanation.
+3. Run the expected-caregiver scenario, then the unmatched late-night visitor scenario.
+4. Trigger the equivalent Ring Playground event and show HMAC verification, SQS delivery and the Bedrock-labeled explanation.
 5. Toggle metadata-only mode.
 6. Open the resident view.
 7. Escalate to the care circle.

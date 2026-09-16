@@ -23,7 +23,7 @@ The repository contains working Ring Partner API integration points:
 - If Bedrock is unavailable, the caregiver experience falls back to deterministic safety rules rather than blocking the alert.
 - The interface labels whether its explanation came from Amazon Bedrock or CareDoor safety rules.
 
-The live UI includes a simulator so the complete judging flow remains reliable even when a physical device is unavailable. For the final demo, the Ring Developer Playground should send the same motion or button event to the webhook endpoint.
+The live UI includes two simulator scenarios—an expected caregiver and an unmatched late-night visitor—so the complete judging flow remains reliable even when a physical device is unavailable. Both scenarios use the same tested correlation rules. For the final demo, the Ring Developer Playground should send the same motion or button event to the webhook endpoint.
 
 ## Run locally
 
@@ -38,11 +38,12 @@ Never commit Ring access tokens, refresh tokens, client secrets, or HMAC keys.
 ## Demo flow
 
 1. Show tomorrow's expected physical-therapy visit.
-2. Select **Simulate Ring event** to receive an unmatched late-night visitor event.
-3. Show the explainable reason: unusual timing and repeated activity.
-4. Toggle **Metadata only** to demonstrate that CareDoor can work without requesting an image.
-5. Preview the large-type resident experience.
-6. Escalate to the trusted care circle.
+2. Select **Run Ring demo → Expected caregiver** to show a successful schedule match.
+3. Run **Late-night visitor** to show repeated activity with no matching visit.
+4. Show the explainable reason and its Bedrock or safety-rule source label.
+5. Toggle **Metadata only** to demonstrate that CareDoor can work without requesting an image.
+6. Preview the large-type resident experience.
+7. Escalate to the trusted care circle.
 
 ## Architecture
 
