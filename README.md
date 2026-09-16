@@ -35,6 +35,12 @@ The live UI includes two simulator scenarios—an expected caregiver and an unma
 
 Never commit Ring access tokens, refresh tokens, client secrets, or HMAC keys.
 
+### Rehearse a signed webhook
+
+Set `RING_WEBHOOK_URL` to your local or staging `/api/ring/webhook` endpoint and set `RING_HMAC_KEY`, then run `npm run demo:ring-event -- expected` or `npm run demo:ring-event -- unmatched`. The script signs the exact transmitted bytes and fails on any non-2xx response.
+
+Run `npm test` to verify schedule correlation, raw-body signature handling, tamper rejection, normalization and request deduplication.
+
 ## Demo flow
 
 1. Show tomorrow's expected physical-therapy visit.

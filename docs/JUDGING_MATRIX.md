@@ -1,0 +1,23 @@
+# Judging matrix
+
+Use this as the final submission audit.
+
+| Criterion | Evidence in CareDoor | Remaining proof for final submission |
+|---|---|---|
+| Technical implementation | Ring device, snapshot and history API client; raw-body HMAC verification; request deduplication; SQS pipeline; Bedrock Converse integration; tested correlation engine | Record a real Ring Playground webhook and a successful Bedrock response |
+| Design | Caregiver dashboard, accessible resident mode, metadata-only privacy control, explicit explanation provenance, calm human-in-the-loop actions | Test the final demo route at presentation resolution and 200% text zoom |
+| Potential impact | Specific audience of older adults, families and home-care teams; clear visit coordination workflow; usable without biometrics | Add one short quote or validation note from a caregiver/home-care professional |
+| Quality of idea | Moves beyond camera viewing into schedule-aware care coordination; privacy-first differentiation; honest uncertainty | State the “context, not surveillance” thesis in the first 20 seconds |
+| Ring track compliance | Real Ring imports/entry points and API calls; simulator-compatible signed webhook; device not required | Public repository and final video must visibly demonstrate Ring simulator/device activity |
+| AWS Builder | Bedrock and SQS implemented with official SDKs and documented | Configure AWS credentials/model/queue and capture successful evidence |
+| Open Source | MIT license and reusable Ring webhook/correlation modules | Publish the repository publicly during the hackathon window and include its URL |
+| Submission completeness | Devpost draft, friction log, demo script, README, architecture description | Add public GitHub URL, video URL, final product feedback and exact track selections |
+
+## Non-negotiable final gates
+
+1. Public repository contains the exact demonstrated source and MIT license.
+2. A real Ring Playground or device event is visible in the video.
+3. Bedrock and SQS are configured and evidenced, not only named.
+4. Video is public, in English and under three minutes.
+5. Every tool used has specific product feedback.
+6. Secrets and personal information are absent from source and video.

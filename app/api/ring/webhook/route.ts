@@ -1,7 +1,8 @@
 import { type RingEventEnvelope, verifyRingWebhook } from "@/lib/ring";
 import { enqueueRingEvent } from "@/lib/aws";
+import { normalizeRingEvent, RingRequestDeduplicator } from "@/lib/webhook";
 
-const recentlyProcessed = new Map<string, number>();
+const deduplicator = new RingRequestDeduplicator();
 
 export async function POST(request: Request) {
   const signingKey = process.env.RING_HMAC_KEY;
@@ -11,21 +12,15 @@ export async function POST(request: Request) {
   if (!(await verifyRingWebhook(rawBody, signature, signingKey))) return Response.json({ error: "Invalid Ring signature" }, { status: 401 });
 
   const event = JSON.parse(new TextDecoder().decode(rawBody)) as RingEventEnvelope;
-  if (!event.meta?.request_id || !event.data?.type) return Response.json({ error: "Invalid Ring event" }, { status: 400 });
-  if (recentlyProcessed.has(event.meta.request_id)) return Response.json({ accepted: true, duplicate: true });
-  recentlyProcessed.set(event.meta.request_id, Date.now());
-  for (const [requestId, createdAt] of recentlyProcessed) if (Date.now() - createdAt > 3_600_000) recentlyProcessed.delete(requestId);
+  let normalized;
+  try {
+    normalized = normalizeRingEvent(event);
+  } catch {
+    return Response.json({ error: "Invalid Ring event" }, { status: 400 });
+  }
+  if (!deduplicator.accept(normalized.requestId)) return Response.json({ accepted: true, duplicate: true });
 
-  // Production: publish this normalized envelope to SQS/EventBridge and return immediately.
-  const normalized = {
-    requestId: event.meta.request_id,
-    accountId: event.meta.account_id,
-    ringEventId: event.data.id,
-    type: event.data.type,
-    deviceId: event.data.attributes?.source,
-    detectedAt: event.data.attributes?.timestamp ?? Date.now(),
-    subtype: event.data.attributes?.sub_type,
-  };
+  // Publish the normalized envelope so Ring delivery stays separate from downstream decisions.
   const queue = await enqueueRingEvent(normalized);
   console.info("Accepted Ring event", { ...normalized, queue });
   return Response.json({ accepted: true, requestId: normalized.requestId, queued: queue.queued });
