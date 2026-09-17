@@ -8,10 +8,10 @@ Use this as the final submission audit.
 | Design | Caregiver dashboard, accessible resident mode, metadata-only privacy control, explicit explanation provenance, calm human-in-the-loop actions | Test the final demo route at presentation resolution and 200% text zoom |
 | Potential impact | Specific audience of older adults, families and home-care teams; clear visit coordination workflow; usable without biometrics | Add one short quote or validation note from a caregiver/home-care professional |
 | Quality of idea | Moves beyond camera viewing into schedule-aware care coordination; privacy-first differentiation; honest uncertainty | State the “context, not surveillance” thesis in the first 20 seconds |
-| Ring track compliance | Real Ring imports/entry points and API calls; simulator-compatible signed webhook; device not required | Public repository and final video must visibly demonstrate Ring simulator/device activity |
+| Ring track compliance | Real Ring imports/entry points and API calls; simulator-compatible signed webhook; public repository published | Final video must visibly demonstrate Ring simulator/device activity |
 | AWS Builder | Bedrock, SQS and DynamoDB implemented with official SDKs; deployable CloudFormation includes encryption, TTL, DLQ and least-privilege IAM | Deploy the stack, configure its outputs and capture successful evidence |
-| Open Source | MIT license and reusable Ring webhook/correlation modules | Publish the repository publicly during the hackathon window and include its URL |
-| Submission completeness | Devpost draft, friction log, demo script, README, architecture description | Add public GitHub URL, video URL, final product feedback and exact track selections |
+| Open Source | Public MIT-licensed repository with reusable Ring webhook/correlation modules: https://github.com/venkatgkasturi/caredoor | Keep the demonstrated revision synchronized with the repository |
+| Submission completeness | Devpost draft, friction log, demo script, README, architecture description, live demo and public GitHub URL | Add video URL, final product feedback and exact track selections |
 
 ## Non-negotiable final gates
 

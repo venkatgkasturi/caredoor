@@ -1,5 +1,8 @@
 # CareDoor — Devpost submission draft
 
+- Live demo: https://caredoor-companion.vengokas.chatgpt.site
+- Public source: https://github.com/venkatgkasturi/caredoor
+
 ## Elevator pitch
 
 CareDoor turns Ring doorstep activity into calm, explainable caregiving workflows for older adults and the people who support them.

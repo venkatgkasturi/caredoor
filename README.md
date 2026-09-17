@@ -2,6 +2,10 @@
 
 CareDoor is a privacy-first doorstep coordination companion for older adults and the people who care for them. It turns Ring motion and doorbell events into calm, explainable workflows: match an arrival to an expected care visit, show context only when the household permits it, and keep a human in control of every escalation.
 
+**Live demo:** [caredoor-companion.vengokas.chatgpt.site](https://caredoor-companion.vengokas.chatgpt.site)
+
+**Source:** [github.com/venkatgkasturi/caredoor](https://github.com/venkatgkasturi/caredoor)
+
 ## Why it matters
 
 A standard camera alert says that somebody is at the door. CareDoor adds the missing caregiving context: whether the visit was expected, why an event needs attention, and who can help next. It deliberately avoids facial recognition and medical or emergency claims.
