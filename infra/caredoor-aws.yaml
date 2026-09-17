@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CareDoor event pipeline for the Amazon Developer Hackathon
+
+Parameters:
+  ApplicationName:
+    Type: String
+    Default: caredoor
+    AllowedPattern: "[a-z0-9-]+"
+  DedupeRetentionSeconds:
+    Type: Number
+    Default: 86400
+    MinValue: 60
+
+Resources:
+  EventDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${ApplicationName}-events-dlq"
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  EventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "${ApplicationName}-events"
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 345600
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt EventDeadLetterQueue.Arn
+        maxReceiveCount: 5
+
+  RingRequestDedupeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ApplicationName}-ring-request-dedupe"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: request_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: request_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  CareDoorRuntimePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Least-privilege access for the CareDoor Ring event path
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: ClaimRingRequestOnce
+            Effect: Allow
+            Action: dynamodb:PutItem
+            Resource: !GetAtt RingRequestDedupeTable.Arn
+          - Sid: PublishNormalizedRingEvents
+            Effect: Allow
+            Action: sqs:SendMessage
+            Resource: !GetAtt EventQueue.Arn
+          - Sid: ExplainDoorEvents
+            Effect: Allow
+            Action: bedrock:InvokeModel
+            Resource: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/*"
+
+Outputs:
+  EventsQueueUrl:
+    Description: Set as CAREDOOR_EVENTS_QUEUE_URL
+    Value: !Ref EventQueue
+  DedupeTableName:
+    Description: Set as CAREDOOR_DEDUPE_TABLE
+    Value: !Ref RingRequestDedupeTable
+  DedupeRetentionSeconds:
+    Description: Set as CAREDOOR_DEDUPE_TTL_SECONDS
+    Value: !Ref DedupeRetentionSeconds
+  RuntimePolicyArn:
+    Description: Attach this policy to the CareDoor runtime role
+    Value: !Ref CareDoorRuntimePolicy

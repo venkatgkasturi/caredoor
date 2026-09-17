@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { verifyRingWebhook, type RingEventEnvelope } from "../lib/ring.ts";
-import { normalizeRingEvent, RingRequestDeduplicator } from "../lib/webhook.ts";
+import { claimRingRequest, normalizeRingEvent, RingRequestDeduplicator } from "../lib/webhook.ts";
 
 const envelope: RingEventEnvelope = {
   meta: { version: "1.1", time: "2026-09-16T23:42:00Z", request_id: "req-demo-001", account_id: "acct-demo" },
@@ -45,4 +45,45 @@ test("deduplicates request IDs and permits them again after the TTL", () => {
 
 test("rejects an incomplete Ring event envelope", () => {
   assert.throws(() => normalizeRingEvent({ meta: { request_id: "" }, data: { id: "", type: "" } }), /Invalid Ring event envelope/);
+});
+
+test("uses a conditional DynamoDB write for durable request claims", async () => {
+  const previousTable = process.env.CAREDOOR_DEDUPE_TABLE;
+  const previousTtl = process.env.CAREDOOR_DEDUPE_TTL_SECONDS;
+  process.env.CAREDOOR_DEDUPE_TABLE = "caredoor-test-dedupe";
+  process.env.CAREDOOR_DEDUPE_TTL_SECONDS = "3600";
+  let input: Record<string, unknown> | undefined;
+  const client = { send: async (command: { input: Record<string, unknown> }) => { input = command.input; return {}; } };
+  try {
+    const result = await claimRingRequest("req-durable", 1_789_602_120_000, client as never);
+    assert.deepEqual(result, { accepted: true, store: "dynamodb" });
+    assert.equal(input?.TableName, "caredoor-test-dedupe");
+    assert.equal(input?.ConditionExpression, "attribute_not_exists(request_id)");
+    assert.deepEqual(input?.Item, {
+      request_id: "req-durable",
+      received_at: "2026-09-16T23:42:00.000Z",
+      expires_at: 1_789_605_720,
+    });
+  } finally {
+    if (previousTable === undefined) delete process.env.CAREDOOR_DEDUPE_TABLE;
+    else process.env.CAREDOOR_DEDUPE_TABLE = previousTable;
+    if (previousTtl === undefined) delete process.env.CAREDOOR_DEDUPE_TTL_SECONDS;
+    else process.env.CAREDOOR_DEDUPE_TTL_SECONDS = previousTtl;
+  }
+});
+
+test("recognizes DynamoDB conditional failures as duplicate deliveries", async () => {
+  const previousTable = process.env.CAREDOOR_DEDUPE_TABLE;
+  process.env.CAREDOOR_DEDUPE_TABLE = "caredoor-test-dedupe";
+  const duplicate = Object.assign(new Error("duplicate"), { name: "ConditionalCheckFailedException" });
+  const client = { send: async () => { throw duplicate; } };
+  try {
+    assert.deepEqual(await claimRingRequest("req-repeat", Date.now(), client as never), {
+      accepted: false,
+      store: "dynamodb",
+    });
+  } finally {
+    if (previousTable === undefined) delete process.env.CAREDOOR_DEDUPE_TABLE;
+    else process.env.CAREDOOR_DEDUPE_TABLE = previousTable;
+  }
 });

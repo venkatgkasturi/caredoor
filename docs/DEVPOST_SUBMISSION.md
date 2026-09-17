@@ -14,7 +14,7 @@ CareDoor correlates Ring motion and doorbell events with scheduled care visits. 
 
 ## How we built it
 
-Ring Partner API integrations discover authorized devices, retrieve snapshots and event history, and accept real-time signed webhooks. The webhook handler verifies Ring's HMAC-SHA256 signature over the exact raw body and deduplicates `meta.request_id` before publishing a normalized event to Amazon SQS. Amazon Bedrock converts structured event facts into a calm one-sentence explanation under strict safety constraints. A deterministic rules explanation remains available when Bedrock is unavailable.
+Ring Partner API integrations discover authorized devices, retrieve snapshots and event history, and accept real-time signed webhooks. The webhook handler verifies Ring's HMAC-SHA256 signature over the exact raw body and uses a conditional DynamoDB write to claim `meta.request_id` exactly once before publishing a normalized event to Amazon SQS. Amazon Bedrock converts structured event facts into a calm one-sentence explanation under strict safety constraints. A deterministic rules explanation remains available when Bedrock is unavailable.
 
 The responsive caregiver and resident experiences use Next.js, React and TypeScript. The production architecture is designed for API Gateway/Lambda or a compatible edge runtime, SQS, Bedrock, encrypted secrets, short-lived media access and lifecycle deletion.
 
@@ -30,7 +30,9 @@ The responsive caregiver and resident experiences use Next.js, React and TypeScr
 ## AWS technology used
 
 - Amazon Bedrock Converse API for constrained plain-language event explanations
-- Amazon SQS for decoupling real-time Ring delivery from downstream correlation and notification processing
+- Amazon DynamoDB with TTL and conditional writes for durable webhook idempotency
+- Amazon SQS with a dead-letter queue for decoupling real-time Ring delivery from downstream correlation and notification processing
+- AWS CloudFormation for reproducible encrypted infrastructure and least-privilege runtime permissions
 - Planned production controls: KMS for secrets, CloudWatch for webhook health and S3 lifecycle deletion for temporary snapshots
 
 ## Privacy and safety

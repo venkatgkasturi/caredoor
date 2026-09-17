@@ -1,8 +1,6 @@
 import { type RingEventEnvelope, verifyRingWebhook } from "@/lib/ring";
 import { enqueueRingEvent } from "@/lib/aws";
-import { normalizeRingEvent, RingRequestDeduplicator } from "@/lib/webhook";
-
-const deduplicator = new RingRequestDeduplicator();
+import { claimRingRequest, normalizeRingEvent } from "@/lib/webhook";
 
 export async function POST(request: Request) {
   const signingKey = process.env.RING_HMAC_KEY;
@@ -18,10 +16,17 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "Invalid Ring event" }, { status: 400 });
   }
-  if (!deduplicator.accept(normalized.requestId)) return Response.json({ accepted: true, duplicate: true });
+  let claim;
+  try {
+    claim = await claimRingRequest(normalized.requestId);
+  } catch (error) {
+    console.error("Could not claim Ring request", { requestId: normalized.requestId, error });
+    return Response.json({ error: "Event store unavailable" }, { status: 503 });
+  }
+  if (!claim.accepted) return Response.json({ accepted: true, duplicate: true, dedupeStore: claim.store });
 
   // Publish the normalized envelope so Ring delivery stays separate from downstream decisions.
   const queue = await enqueueRingEvent(normalized);
   console.info("Accepted Ring event", { ...normalized, queue });
-  return Response.json({ accepted: true, requestId: normalized.requestId, queued: queue.queued });
+  return Response.json({ accepted: true, requestId: normalized.requestId, queued: queue.queued, dedupeStore: claim.store });
 }

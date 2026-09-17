@@ -19,7 +19,8 @@ The repository contains working Ring Partner API integration points:
 
 - `POST /api/events/explain` calls Amazon Bedrock through the official AWS SDK to turn structured event facts into one calm, plain-language sentence.
 - The prompt explicitly prohibits identity guesses, danger claims, diagnoses, and unsupported facts.
-- Signed Ring webhooks are normalized and published to Amazon SQS when `CAREDOOR_EVENTS_QUEUE_URL` is configured.
+- Signed Ring webhooks are claimed exactly once in DynamoDB and published to Amazon SQS when the corresponding environment values are configured.
+- `infra/caredoor-aws.yaml` provisions the encrypted queue, dead-letter queue, TTL-enabled deduplication table, and a least-privilege runtime policy.
 - If Bedrock is unavailable, the caregiver experience falls back to deterministic safety rules rather than blocking the alert.
 - The interface labels whether its explanation came from Amazon Bedrock or CareDoor safety rules.
 
@@ -29,7 +30,7 @@ The live UI includes two simulator scenarios—an expected caregiver and an unma
 
 1. Install dependencies with `npm install`.
 2. Copy `.env.example` to `.env.local` and add staging credentials from the Ring Developer Portal.
-3. Add AWS credentials, a Bedrock model ID, and an optional SQS queue URL.
+3. Deploy `infra/caredoor-aws.yaml`, then add AWS credentials, a Bedrock model ID, and the stack's queue/table outputs.
 4. Start the app with `npm run dev`.
 5. Configure the public HTTPS URL ending in `/api/ring/webhook` as the Ring webhook URL.
 
@@ -53,9 +54,9 @@ Run `npm test` to verify schedule correlation, raw-body signature handling, tamp
 
 ## Architecture
 
-Ring signed webhook → verification/deduplication → Amazon SQS → appointment correlation → optional Ring snapshot → Amazon Bedrock explanation → caregiver and resident experiences.
+Ring signed webhook → HMAC verification → DynamoDB idempotency claim → Amazon SQS → appointment correlation → optional Ring snapshot → Amazon Bedrock explanation → caregiver and resident experiences.
 
-For production, the normalized event should be published to Amazon SQS or EventBridge and processed asynchronously. Tokens should be encrypted with AWS KMS, snapshots should use short-lived signed URLs and lifecycle deletion, and operational events should be monitored in CloudWatch.
+For production, the normalized event should be processed asynchronously from SQS. Tokens should be encrypted with AWS KMS, snapshots should use short-lived signed URLs and lifecycle deletion, and operational events should be monitored in CloudWatch.
 
 ## Privacy choices
 
